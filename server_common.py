@@ -56,9 +56,10 @@ class Receiver(object):
         return data
     
     def recv_image_data(self):
-        scalars = np.concatenate([ self.unit_intensity_func(self.safe_recv_packet_data()) for _ in range(self.image_num_packets) ])
-        levels = np.round(scalars * 255.0).clip(0, 255).astype(np.uint8)
-        return levels
+        units = np.concatenate([ self.unit_intensity_func(self.safe_recv_packet_data()) for _ in range(self.image_num_packets) ])
+#        levels = np.round(scalars * 255.0).clip(0, 255).astype(np.uint8)
+#        return levels
+        return units
     
     def next_image(self):
         return self.recv_image_data().reshape(self.image_size)

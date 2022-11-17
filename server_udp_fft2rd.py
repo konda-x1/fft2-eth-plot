@@ -23,14 +23,16 @@ PACKET_DISCARD_BYTES = 2
 UNIT_SIZE = 2 # bytes per data unit
 UNIT_INTENSITY_FUNC = maggen(2**16-1, 'uint16', 'big')
  
-class Window(QMainWindow):
+class RDWindow(QMainWindow):
 
-    def __init__(self):
+    def __init__(self, image_size, scalex=1, scaley=1):
         super().__init__()
- 
+
         self.imv = pg.ImageView()
-        img = make_gradient(*IMAGE_SIZE)
-        self.imv.setImage(img)
+        self.imv.view.invertY(False)
+        self.imv.getImageItem().setTransform(QTransform().scale(scalex, scaley))
+        img = make_gradient(*image_size)
+        self.imv.getImageItem().setImage(img)
  
         # Set a "short rainbow" color map
         colors = [
@@ -48,7 +50,7 @@ class Window(QMainWindow):
 class MainApp(AbstractApp):
     def __init__(self):
         app = QApplication(sys.argv)
-        window = Window()
+        window = RDWindow(IMAGE_SIZE)
         window.resize(512, 768)
         window.setWindowTitle("2D FFT Range-Doppler")
         receiver = Receiver(UDP_IP, UDP_PORT, IMAGE_SIZE, PACKET_SIZE, PACKET_DISCARD_BYTES, UNIT_SIZE, UNIT_INTENSITY_FUNC)    

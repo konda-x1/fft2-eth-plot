@@ -25,7 +25,7 @@ PACKET_DISCARD_BYTES = 2
 UNIT_SIZE = 4 # bytes per data unit
 UNIT_INTENSITY_FUNC = complexmodgen(2*16384*16384, 'int16', 'big')
 
-class MyOpenGLWindow( QtGui.QOpenGLWindow ):
+class RAOpenGLWindow( QtGui.QOpenGLWindow ):
     def __init__( self, image_size, render_angle=90, render_num_points=1024 ):
         super().__init__()
         if render_num_points < 2:
@@ -141,7 +141,7 @@ class MyOpenGLWindow( QtGui.QOpenGLWindow ):
 class MainApp(AbstractApp):
     def __init__(self):
         app = QtWidgets.QApplication( sys.argv )
-        window = MyOpenGLWindow(IMAGE_SIZE)
+        window = RAOpenGLWindow(IMAGE_SIZE)
         window.resize( 768, 512 )
         window.setTitle("2D FFT Range-Angle")
         receiver = Receiver(UDP_IP, UDP_PORT, IMAGE_SIZE, PACKET_SIZE, PACKET_DISCARD_BYTES, UNIT_SIZE, UNIT_INTENSITY_FUNC)    
