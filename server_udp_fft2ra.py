@@ -26,10 +26,11 @@ UNIT_SIZE = 4 # bytes per data unit
 UNIT_INTENSITY_FUNC = complexmodgen(2*16384*16384, 'int16', 'big')
 
 class RAOpenGLWindow( QtGui.QOpenGLWindow ):
-    def __init__( self, image_size, render_angle=90, render_num_points=1024 ):
+    def __init__( self, image_size, render_angle=90, render_num_points=1024, image_data_process_func=lambda x:x ):
         super().__init__()
         if render_num_points < 2:
             raise ValueError("render_num_points must be at least 2")
+        self.image_data_process_func = image_data_process_func
         self.angle = render_angle
         self.num_points = render_num_points
         self.profile = QtGui.QOpenGLVersionProfile()
@@ -122,6 +123,11 @@ class RAOpenGLWindow( QtGui.QOpenGLWindow ):
 
 #        self.program.release()
 #        self.texture.setData(QtGui.QOpenGLTexture.Luminance, QtGui.QOpenGLTexture.UInt8, np.random.randint(0,255, [256,8]).astype(np.uint8))
+
+    def update_image(self, src_image):
+        image = self.image_data_process_func(src_image)
+        self.texture.setData(QtGui.QOpenGLTexture.Luminance, QtGui.QOpenGLTexture.UInt8, image)
+        self.update()
 
     def setVertexBuffer( self, data_array, dim_vertex, program, shader_str ):
         vbo = QtGui.QOpenGLBuffer( QtGui.QOpenGLBuffer.VertexBuffer )

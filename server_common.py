@@ -39,7 +39,7 @@ class Receiver(object):
         self.unit_intensity_func = unit_intensity_func
         self.packet_buffer_size = packet_buffer_size
         self.image_num_packets = units_per_image // units_per_packet
-        print(f"{self.__class__.__name__}: Expecting {self.image_num_packets} packets with {self.packet_size} bytes ({self.effective_packet_size} effective bytes) to form a single image.")
+        print(f"{self.__class__.__name__}({udp_ip}:{udp_port}): Expecting {self.image_num_packets} packets with {self.packet_size} bytes ({self.effective_packet_size} effective bytes) to form a single image.")
     
     def recv_packet_data(self):
         data = self.sock.recv(self.packet_buffer_size)
@@ -68,7 +68,6 @@ class Receiver(object):
 class Worker(QObject):
     update = pyqtSignal()
     def __init__(self, receiver):
-        global IMAGE_SIZE
         super().__init__()
         self.r = receiver
 
@@ -76,6 +75,14 @@ class Worker(QObject):
         while True:
             self.data = self.r.next_image()
             self.update.emit()
+
+def make_thread_worker(receiver, update_callback):
+    thread = QThread()
+    worker = Worker(receiver)
+    worker.moveToThread(thread)
+    thread.started.connect(worker.run)
+    worker.update.connect(lambda: update_callback(worker.data))
+    return thread, worker
 
 class AbstractApp(object):
     def __init__(self, qapp, window, receiver):

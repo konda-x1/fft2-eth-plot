@@ -25,9 +25,10 @@ UNIT_INTENSITY_FUNC = maggen(2**16-1, 'uint16', 'big')
  
 class RDWindow(QMainWindow):
 
-    def __init__(self, image_size, scalex=1, scaley=1):
+    def __init__(self, image_size, scalex=1, scaley=1, image_data_process_func=lambda x:x):
         super().__init__()
 
+        self.image_data_process_func = image_data_process_func
         self.imv = pg.ImageView()
         self.imv.view.invertY(False)
         self.imv.getImageItem().setTransform(QTransform().scale(scalex, scaley))
@@ -46,6 +47,11 @@ class RDWindow(QMainWindow):
         self.imv.setColorMap(cmap)
  
         self.setCentralWidget(self.imv)
+    
+    def update_image(self, src_image):
+        image = self.image_data_process_func(src_image)
+        self.imv.getImageItem().setImage(image)
+        self.update()
 
 class MainApp(AbstractApp):
     def __init__(self):
