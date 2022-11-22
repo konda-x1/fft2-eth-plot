@@ -6,6 +6,11 @@ from PyQt5.QtWidgets import QApplication
 from server_common import *
 from server_udp_fft2rd import RDWindow
 from server_udp_fft2ra import RAOpenGLWindow
+from scipy.interpolate import interp2d
+
+RD_UPSCALE_INTERPOLATE_FACTOR=4
+RD_SCALEX=4
+RD_SCALEY=1
 
 def unitsgen(np_dtype='uint16', endian='big'):
     def units(data):
@@ -13,7 +18,13 @@ def unitsgen(np_dtype='uint16', endian='big'):
     return units
 
 def rd_values_adjust(img):
-    return np.fft.fftshift(img, 1)
+    shifted = np.fft.fftshift(img, 1)
+    xcoords = RD_SCALEX * RD_UPSCALE_INTERPOLATE_FACTOR * np.arange(shifted.shape[1])
+    ycoords = RD_SCALEY * RD_UPSCALE_INTERPOLATE_FACTOR * np.arange(shifted.shape[0])
+    interp_func = interp2d(xcoords, ycoords, shifted, kind='linear')
+    interpolated_real = interp_func(np.arange(RD_SCALEX * RD_UPSCALE_INTERPOLATE_FACTOR * shifted.shape[1]), np.arange(RD_SCALEY * RD_UPSCALE_INTERPOLATE_FACTOR * shifted.shape[0]))
+    interpolated = np.round(interpolated_real).clip(0, 2**16-1).astype(np.uint16)
+    return interpolated
 
 def ra_values_adjust(img):
 #    This function must return an array of integer values in the range [0, 255] because that's the
@@ -34,7 +45,7 @@ UNIT_INTENSITY_FUNC = unitsgen('uint16', 'big')
 class MainApp(object):
     def __init__(self, rd_values_adjust_func, ra_values_adjust_func):
         self.app = QApplication(sys.argv)
-        self.window_rd = RDWindow(IMAGE_SIZE, scalex=4, scaley=1, image_data_process_func=rd_values_adjust_func)
+        self.window_rd = RDWindow([RD_UPSCALE_INTERPOLATE_FACTOR * RD_SCALEY * IMAGE_SIZE[0], RD_UPSCALE_INTERPOLATE_FACTOR * RD_SCALEX * IMAGE_SIZE[1]], image_data_process_func=rd_values_adjust_func)
         self.window_rd.resize(512, 768)
         self.window_rd.setWindowTitle("2D FFT Range-Doppler")
         self.window_ra = RAOpenGLWindow(IMAGE_SIZE, image_data_process_func=ra_values_adjust_func)
