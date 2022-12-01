@@ -1,4 +1,7 @@
 #version 300 es
+#undef lowp
+#undef mediump
+#undef highp
 precision mediump float;
 
 uniform sampler2D texture;
