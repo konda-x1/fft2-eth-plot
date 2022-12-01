@@ -1,17 +1,14 @@
-#version 330 core
+#version 300 es
 
 in vec3 position;
 in vec2 texCoord;
 
 uniform mat4 mvp;
 
-out VS_OUT
-{
-	vec2 texc;
-} vs_out;
+out vec2 texc;
 
 void main(void)
 {
     gl_Position = mvp * vec4(position, 1.0);
-    vs_out.texc = texCoord;
+    texc = texCoord;
 }

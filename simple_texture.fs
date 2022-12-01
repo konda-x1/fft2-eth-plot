@@ -1,11 +1,9 @@
-#version 330 core
+#version 300 es
+precision mediump float;
 
 uniform sampler2D texture;
 
-in VS_OUT
-{
-	vec2 texc;
-} fs_in;
+in vec2 texc;
 
 out vec4 color;
 
@@ -23,5 +21,5 @@ vec4 grayToShortRainbow(vec4 grayColor)
 
 void main(void)
 {
-    color = grayToShortRainbow(texture2D(texture, fs_in.texc));
+    color = grayToShortRainbow(texture2D(texture, texc));
 }
