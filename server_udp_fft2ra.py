@@ -30,15 +30,12 @@ class RAOpenGLWindow( QtGui.QOpenGLWindow ):
         super().__init__()
         if render_num_points < 2:
             raise ValueError("render_num_points must be at least 2")
+        self.image_size = image_size
         self.image_data_process_func = image_data_process_func
         self.angle = render_angle
         self.num_points = render_num_points
         self.profile = QtGui.QOpenGLVersionProfile()
         self.profile.setVersion( 2, 0 )
-        
-        h, w = image_size
-        imat = make_gradient(h, w)
-        self.image = QtGui.QImage(imat.data, w, h, w, QtGui.QImage.Format_Grayscale8)#.mirrored()
 
     def rads(self):
         return np.radians(self.angle)
@@ -60,9 +57,20 @@ class RAOpenGLWindow( QtGui.QOpenGLWindow ):
         self.vao_offscreen.create()
         self.vao = QtGui.QOpenGLVertexArrayObject( self )
         self.vao.create()
-        self.texture = QtGui.QOpenGLTexture( self.image, QtGui.QOpenGLTexture.DontGenerateMipMaps )
+        
+        h, w = self.image_size
+        self.texture = QtGui.QOpenGLTexture(QtGui.QOpenGLTexture.Target2D)
+        self.texture.setSize(w, h)
+        self.texture.setFormat(QtGui.QOpenGLTexture.RG8_UNorm)
         self.texture.setWrapMode(QtGui.QOpenGLTexture.ClampToEdge)
         self.texture.setMagnificationFilter(QtGui.QOpenGLTexture.Linear)
+        self.texture.allocateStorage()
+        imat = make_gradient(h, w)
+        self.texture.setData(QtGui.QOpenGLTexture.RG, QtGui.QOpenGLTexture.UInt8, np.repeat(imat,2).data)
+        
+        #self.texture = QtGui.QOpenGLTexture( self.image, QtGui.QOpenGLTexture.DontGenerateMipMaps )
+        #self.texture.setWrapMode(QtGui.QOpenGLTexture.ClampToEdge)
+        #self.texture.setMagnificationFilter(QtGui.QOpenGLTexture.Linear)
 
         self.program = QtGui.QOpenGLShaderProgram( self )
         self.program.addShaderFromSourceFile( QtGui.QOpenGLShader.Vertex, 'simple_texture.vs' )
@@ -110,8 +118,7 @@ class RAOpenGLWindow( QtGui.QOpenGLWindow ):
         self.gl.glClear(self.gl.GL_COLOR_BUFFER_BIT)
 
     def paintGL( self ):
-        #self.gl.glViewport( 0, 0, self.image.width(), self.image.height() )
-
+#        self.gl.glViewport( 0, 0, self.image.width(), self.image.height() )
 #        self.program.bind()
 
 #        self.texture.bind()
@@ -126,7 +133,7 @@ class RAOpenGLWindow( QtGui.QOpenGLWindow ):
 
     def update_image(self, src_image):
         image = self.image_data_process_func(src_image)
-        self.texture.setData(QtGui.QOpenGLTexture.Luminance, QtGui.QOpenGLTexture.UInt8, image)
+        self.texture.setData(QtGui.QOpenGLTexture.RG, QtGui.QOpenGLTexture.UInt8, np.repeat(image,2).data)
         self.update()
 
     def setVertexBuffer( self, data_array, dim_vertex, program, shader_str ):
